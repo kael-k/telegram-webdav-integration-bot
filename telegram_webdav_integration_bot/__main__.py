@@ -1,12 +1,16 @@
 import logging
 
+from telegram_webdav_integration_bot.bot import run_telegram_bot
+from telegram_webdav_integration_bot.logging import config_logging
+
 log = logging.getLogger(__name__)
 
 
 def main():
-    log.info("Starting telegram-webdav-integration-bot...")
+    config_logging()
+    log.info("Starting telegram_webdav_integration_bot...")
+    run_telegram_bot()
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
     main()
