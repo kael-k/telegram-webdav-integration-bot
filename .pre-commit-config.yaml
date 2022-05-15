@@ -32,7 +32,7 @@ repos:
     rev: 'v0.950'
     hooks:
       - id: mypy
-        args: [ --ignore-missing-imports ]
+        language: system
   - repo: https://github.com/pycqa/isort
     rev: 5.8.0
     hooks:

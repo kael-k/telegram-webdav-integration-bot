@@ -1,4 +1,5 @@
 import logging
+from typing import Sequence
 from urllib.parse import urljoin
 
 import requests
@@ -12,16 +13,25 @@ env_config = EnvironmentConfig()
 
 
 def process_message(update: Update, _: CallbackContext):
-    handler_log = logging.LoggerAdapter(log, {"chat_id": update.effective_chat.id})
-    handler_log.debug("Incoming message...")
-    if not update.effective_message.effective_attachment:
+    if not update.effective_chat:
+        log.warning(f"No chat_id found in update {update.update_id}")
+        handler_log = logging.LoggerAdapter(log)
+    else:
+        handler_log = logging.LoggerAdapter(log, {"chat_id": update.effective_chat.id})
+        handler_log.debug("Incoming message...")
+
+    if not (message := update.effective_message):
+        raise ValueError("No message found in chat...")
+
+    if not message.effective_attachment:
         handler_log.debug("No attachmet in  Incoming message...")
         return
 
-    if isinstance(update.effective_message.effective_attachment, list):
-        attachments = update.effective_message.effective_attachment
-    else:
-        attachments = [update.effective_message.effective_attachment]
+    attachments: Sequence[Document | Video | PhotoSize]
+    if isinstance(message.effective_attachment, list):
+        attachments = message.effective_attachment
+    elif isinstance(message.effective_attachment, (Document, Video)):
+        attachments = [message.effective_attachment]
 
     for attachment in attachments:
         if isinstance(attachment, (Document, Video)):

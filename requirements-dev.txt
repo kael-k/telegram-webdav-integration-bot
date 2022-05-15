@@ -1,1 +1,2 @@
 types-requests~=2.27.25
+mypy~=0.950
