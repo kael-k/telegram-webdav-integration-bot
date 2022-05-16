@@ -10,9 +10,9 @@ class EnvironmentConfig:
     TELEGRAM_BOT_CHAT_IDS_DELIMITER = ";"
 
     def __init__(self):
-        self.TELEGRAM_BOT_API_KEY = environ.get("TELEGRAM_BOT_API_KEY")
-        if not environ.get("TELEGRAM_BOT_API_KEY"):
-            raise EnvironmentError("Missing required env TELEGRAM_BOT_API_KEY")
+        self.TELEGRAM_BOT_TOKEN = environ.get("TELEGRAM_BOT_TOKEN")
+        if not environ.get("TELEGRAM_BOT_TOKEN"):
+            raise EnvironmentError("Missing required env TELEGRAM_BOT_TOKEN")
 
         # process messages only for these chat_ids, if None do not filter chat id
         self.TELEGRAM_BOT_CHAT_IDS = None
@@ -29,7 +29,7 @@ class EnvironmentConfig:
         if self.WEBDAV_PATH_URL[-1] != "/":
             self.WEBDAV_PATH_URL += "/"
 
-        if not environ.get("TELEGRAM_BOT_API_KEY"):
+        if not environ.get("TELEGRAM_BOT_TOKEN"):
             raise EnvironmentError("Missing required env WEBDAV_PATH_URL")
 
         self.WEBDAV_USERNAME = environ.get("WEBDAV_USERNAME")

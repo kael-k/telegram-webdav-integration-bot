@@ -7,7 +7,7 @@ RUN apk add gcc py3-cffi libffi-dev musl-dev openssl openssl-dev && \
     pip install -r requirements.txt && \
     apk del gcc libffi-dev musl-dev openssl-dev
 
-ENV TELEGRAM_BOT_API_KEY ""
+ENV TELEGRAM_BOT_TOKEN ""
 ENV TELEGRAM_BOT_CHAT_IDS ""
 ENV WEBDAV_USERNAME ""
 ENV WEBDAV_PASSWORD ""

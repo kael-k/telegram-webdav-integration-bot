@@ -13,7 +13,7 @@ An already built image is available on dockerhub: https://hub.docker.com/r/kaelk
 To start the bot
 ```
 podman run \
-    -e TELEGRAM_BOT_API_KEY="<my-sercet-token>"
+    -e TELEGRAM_BOT_TOKEN="<my-sercet-token>"
     -e TELEGRAM_BOT_CHAT_IDS="<chatid1>;<chatid2>;[...];<chatidn>"
     -e WEBDAV_USERNAME "<webdav-username>"
     -e WEBDAV_PASSWORD "<webdav-password>"

@@ -68,7 +68,7 @@ def process_message(update: Update, _: CallbackContext):
 
 
 def run_telegram_bot():
-    updater = Updater(env_config.TELEGRAM_BOT_API_KEY)
+    updater = Updater(env_config.TELEGRAM_BOT_TOKEN)
     dispatcher = updater.dispatcher
 
     filters = Filters.photo | Filters.video | Filters.document | Filters.attachment
