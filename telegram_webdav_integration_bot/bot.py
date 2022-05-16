@@ -1,5 +1,4 @@
 import logging
-from typing import Sequence
 from urllib.parse import urljoin
 
 import requests
@@ -27,44 +26,49 @@ def process_message(update: Update, _: CallbackContext):
         handler_log.debug("No attachmet in  Incoming message...")
         return
 
-    attachments: Sequence[Document | Video | PhotoSize]
+    attachment: Document | Video | PhotoSize
+    filename: str
+
     if isinstance(message.effective_attachment, list):
-        attachments = message.effective_attachment
+        if not len(message.effective_attachment):
+            handler_log.warning("Skipping attachment, empty list of PhotoSize")
+            return
+        attachment = sorted(
+            message.effective_attachment,
+            key=lambda x: int(x.file_size or 0),
+            reverse=True,
+        )[0]
+        filename = f"{attachment.file_unique_id}.jpg"
     elif isinstance(message.effective_attachment, (Document, Video)):
-        attachments = [message.effective_attachment]
+        attachment = message.effective_attachment
+        filename = attachment.file_name or attachment.file_id
+    else:
+        handler_log.warning(
+            "Skipping attachment file, the bot do not know "
+            + f"how to manage attachment type {type(message.effective_attachment)}"
+        )
+        return
 
-    for attachment in attachments:
-        if isinstance(attachment, (Document, Video)):
-            filename = attachment.file_name
-        elif isinstance(attachment, PhotoSize):
-            filename = f"{attachment.file_unique_id}.jpg"
-        else:
-            handler_log.warning(
-                f"Skipping attachment file with id: {attachment.file_id},"
-                + f" the bot do not know how to manage attachment type {type(attachment)}"
-            )
-            continue
+    raw_attachment = attachment.get_file().download_as_bytearray()
+    url = urljoin(env_config.WEBDAV_PATH_URL, filename, allow_fragments=False)
 
-        raw_attachment = attachment.get_file().download_as_bytearray()
-        url = urljoin(env_config.WEBDAV_PATH_URL, filename, allow_fragments=False)
+    webdav_auth = None
+    if env_config.WEBDAV_USERNAME and env_config.WEBDAV_PASSWORD:
+        webdav_auth = (env_config.WEBDAV_USERNAME, env_config.WEBDAV_PASSWORD)
 
-        webdav_auth = None
-        if env_config.WEBDAV_USERNAME and env_config.WEBDAV_PASSWORD:
-            webdav_auth = (env_config.WEBDAV_USERNAME, env_config.WEBDAV_PASSWORD)
+    handler_log.info(f"Uploading file {filename} to WebDAV...")
+    try:
+        res = requests.put(url, raw_attachment, auth=webdav_auth)
+    except requests.exceptions.RequestException:
+        handler_log.exception(f"Error during the upload of {filename} to WebDAV")
+        return
 
-        handler_log.info(f"Uploading file {filename} to WebDAV...")
-        try:
-            res = requests.put(url, raw_attachment, auth=webdav_auth)
-        except requests.exceptions.RequestException:
-            handler_log.exception(f"Error during the upload of {filename} to WebDAV")
-            continue
-
-        if res.ok:
-            handler_log.info(f"Upload of {filename} successfully completed")
-        else:
-            handler_log.error(
-                f"Error during the upload of {filename} to WebDAV, server responded {res.status_code} {res.reason}"
-            )
+    if res.ok:
+        handler_log.info(f"Upload of {filename} successfully completed")
+    else:
+        handler_log.error(
+            f"Error during the upload of {filename} to WebDAV, server responded {res.status_code} {res.reason}"
+        )
 
 
 def run_telegram_bot():
