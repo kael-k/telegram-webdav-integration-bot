@@ -17,5 +17,4 @@ jobs:
           python-version: '3.10'
       - run: pip install pre-commit
       - run: pip install -r requirements.txt
-      - run: pip install -r requirements-dev.txt
       - run: pre-commit run -a
