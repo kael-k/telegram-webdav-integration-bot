@@ -7,6 +7,8 @@ To build the bot
 podman build . -t telegram-webdav-integration-bot
 ```
 
+An already built image is available on dockerhub: https://hub.docker.com/r/kaelk/telegram-webdav-integration-bot
+
 ## Run
 To start the bot
 ```
