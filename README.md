@@ -1,4 +1,4 @@
-# Telegram Webdav Integration Bot
+# Telegram WebDAV Integration Bot
 [![Python 3.10](https://img.shields.io/badge/python-3.10-blue?style=flat-square&logo=python)](LICENSE)
 [![GPLv3 License](https://img.shields.io/badge/license-GPLv3-green?style=flat-square&logo=legal)](LICENSE)
 [![Code style: black](https://img.shields.io/badge/black-v22.3.0-orange?style=flat-square)](https://github.com/psf/black)
@@ -26,7 +26,7 @@ podman run \
 ```
 
 * `ENABLE_DEBUG` by default is "0", i you do not need debug you can omit the env
-* if your webdav server doesn't need authn, omit envs `WEBDAV_USERNAME` and `WEBDAV_PASSWORD`
+* if your WebDAV service doesn't need authn, omit envs `WEBDAV_USERNAME` and `WEBDAV_PASSWORD`
 * also `TELEGRAM_BOT_CHAT_IDS` is optional, however this means that **EVERYONE** can send a message to the bot
 and they will **ALL** be processed
 
