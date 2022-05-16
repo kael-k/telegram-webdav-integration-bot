@@ -1,4 +1,5 @@
 import logging
+import mimetypes
 from urllib.parse import urljoin
 
 import requests
@@ -41,7 +42,15 @@ def process_message(update: Update, _: CallbackContext):
         filename = f"{attachment.file_unique_id}.jpg"
     elif isinstance(message.effective_attachment, (Document, Video)):
         attachment = message.effective_attachment
-        filename = attachment.file_name or attachment.file_id
+        if attachment.file_name:
+            filename = attachment.file_name
+        else:
+            extension = (
+                mimetypes.guess_extension(message.effective_attachment.mime_type or "")
+                or ""
+            )
+            filename = f"{attachment.file_unique_id}{extension}"
+
     else:
         handler_log.warning(
             "Skipping attachment file, the bot do not know "
