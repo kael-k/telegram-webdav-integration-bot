@@ -45,10 +45,7 @@ def process_message(update: Update, _: CallbackContext):
         if attachment.file_name:
             filename = attachment.file_name
         else:
-            extension = (
-                mimetypes.guess_extension(message.effective_attachment.mime_type or "")
-                or ""
-            )
+            extension = mimetypes.guess_extension(attachment.mime_type or "") or ""
             filename = f"{attachment.file_unique_id}{extension}"
 
     else:
