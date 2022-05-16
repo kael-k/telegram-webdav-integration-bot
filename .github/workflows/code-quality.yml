@@ -1,4 +1,4 @@
-name: Pull Request
+name: Code quality
 
 on:
   push:
