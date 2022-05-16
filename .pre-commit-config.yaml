@@ -32,7 +32,8 @@ repos:
     rev: 'v0.950'
     hooks:
       - id: mypy
-        language: system
+        additional_dependencies:
+          - 'types-requests~=2.27.25'
   - repo: https://github.com/pycqa/isort
     rev: 5.8.0
     hooks:

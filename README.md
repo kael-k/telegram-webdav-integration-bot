@@ -41,4 +41,4 @@ podman build . -t telegram-webdav-integration-bot
 
 ### Source
 All dependencies are listed in `requirements.txt`.
-However, in order to pass `pre-commit` validation, you also need to install `requirements-dev.txt`.
+If you want to contribute, you'll also need to install `pre-commit` to check the code quality.
