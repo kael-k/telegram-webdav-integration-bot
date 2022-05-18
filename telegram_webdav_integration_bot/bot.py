@@ -1,15 +1,47 @@
 import logging
 import mimetypes
+from typing import Union
 from urllib.parse import urljoin
+from uuid import uuid4
 
 import requests
 from telegram import Document, PhotoSize, Update, Video
 from telegram.ext import CallbackContext, Filters, MessageHandler, Updater
 
 from telegram_webdav_integration_bot.env import EnvironmentConfig
+from telegram_webdav_integration_bot.utils import get_now_str
 
 log = logging.getLogger(__name__)
 env_config = EnvironmentConfig()
+
+UploadAttachment = Union[Document, Video, PhotoSize]
+
+
+def get_filename(attachment: UploadAttachment):
+    if hasattr(attachment, "file_name") and attachment.file_name:
+        return attachment.file_name
+
+    extension = ""
+    if env_config.TELEGRAM_FILE_NAMING_INCLUDE_EXTENSION:
+        if hasattr(attachment, "mime_type"):
+            extension = mimetypes.guess_extension(attachment.mime_type or "") or ""
+        else:
+            if isinstance(attachment, PhotoSize):
+                extension = ".jpg"
+
+    if env_config.TELEGRAM_FILE_NAMING_CONVENTION == "file-unique-id":
+        return f"{attachment.file_unique_id}{extension}"
+    if env_config.TELEGRAM_FILE_NAMING_CONVENTION == "random-uuid":
+        return f"{uuid4().hex}{extension}"
+    if env_config.TELEGRAM_FILE_NAMING_CONVENTION == "date":
+        return f"{get_now_str()}{extension}"
+    if env_config.TELEGRAM_FILE_NAMING_CONVENTION == "date+type":
+        filetype = "file"
+        if isinstance(attachment, Video):
+            filetype = "video"
+        if isinstance(attachment, PhotoSize):
+            filetype = "image"
+        return f"{get_now_str()}-{filetype}{extension}"
 
 
 def process_message(update: Update, _: CallbackContext):
@@ -27,7 +59,7 @@ def process_message(update: Update, _: CallbackContext):
         handler_log.debug("No attachmet in  Incoming message...")
         return
 
-    attachment: Document | Video | PhotoSize
+    attachment: UploadAttachment
     filename: str
 
     if isinstance(message.effective_attachment, list):
@@ -39,15 +71,8 @@ def process_message(update: Update, _: CallbackContext):
             key=lambda x: int(x.file_size or 0),
             reverse=True,
         )[0]
-        filename = f"{attachment.file_unique_id}.jpg"
     elif isinstance(message.effective_attachment, (Document, Video)):
         attachment = message.effective_attachment
-        if attachment.file_name:
-            filename = attachment.file_name
-        else:
-            extension = mimetypes.guess_extension(attachment.mime_type or "") or ""
-            filename = f"{attachment.file_unique_id}{extension}"
-
     else:
         handler_log.warning(
             "Skipping attachment file, the bot do not know "
@@ -55,6 +80,7 @@ def process_message(update: Update, _: CallbackContext):
         )
         return
 
+    filename = get_filename(attachment)
     raw_attachment = attachment.get_file().download_as_bytearray()
     url = urljoin(env_config.WEBDAV_PATH_URL, filename, allow_fragments=False)
 

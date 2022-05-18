@@ -8,6 +8,12 @@ class EnvironmentConfig:
     """
 
     TELEGRAM_BOT_CHAT_IDS_DELIMITER = ";"
+    TELEGRAM_VALID_NAMING_CONVENTION = (
+        "file-unique-id",
+        "random-uuid",
+        "date",
+        "date+type",
+    )
 
     def __init__(self):
         self.TELEGRAM_BOT_TOKEN = environ.get("TELEGRAM_BOT_TOKEN")
@@ -23,6 +29,21 @@ class EnvironmentConfig:
                     self.TELEGRAM_BOT_CHAT_IDS_DELIMITER
                 )
             ]
+
+        # name generation for attachments that have no filename (such as videos and photos)
+        self.TELEGRAM_FILE_NAMING_CONVENTION = environ.get(
+            "TELEGRAM_FILE_NAMING_CONVENTION", "date+type"
+        )
+        if (
+            self.TELEGRAM_FILE_NAMING_CONVENTION
+            not in self.TELEGRAM_VALID_NAMING_CONVENTION
+        ):
+            raise EnvironmentError(
+                f"TELEGRAM_FILE_NAMING_CONVENTION must be one of {', '.join(self.TELEGRAM_VALID_NAMING_CONVENTION)}"
+            )
+        self.TELEGRAM_FILE_NAMING_INCLUDE_EXTENSION = (
+            environ.get("TELEGRAM_FILE_NAMING_INCLUDE_EXTENSION", "1") == "1"
+        )
 
         self.WEBDAV_PATH_URL = environ.get("WEBDAV_PATH_URL")
         # final slash urllib.parse.urljoin

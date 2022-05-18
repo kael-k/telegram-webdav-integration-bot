@@ -21,6 +21,8 @@ podman run \
     -e TELEGRAM_BOT_CHAT_IDS="[<chatid1>[;<chatid2>;<...>;<chatidn>]]" \
     -e WEBDAV_USERNAME "<webdav-username>" \
     -e WEBDAV_PASSWORD "<webdav-password>" \
+    -e TELEGRAM_FILE_NAMING_CONVENTION "date+type" \
+    -e TELEGRAM_FILE_NAMING_INCLUDE_EXTENSION "1" \
     -e ENABLE_DEBUG "(0|1)" \
     kaelk/telegram-webdav-integration-bot
 ```
@@ -29,6 +31,14 @@ podman run \
 * if your WebDAV service doesn't need authn, omit envs `WEBDAV_USERNAME` and `WEBDAV_PASSWORD`
 * also `TELEGRAM_BOT_CHAT_IDS` is optional, however this means that **EVERYONE** can send a message to the bot
 and they will **ALL** be processed
+* `TELEGRAM_FILE_NAMING_CONVENTION` and `TELEGRAM_FILE_NAMING_INCLUDE_EXTENSION` are for generating names
+for attachments that doesn't have one:
+  * `TELEGRAM_FILE_NAMING_CONVENTION`: which method use to generate file name, valid values:
+    * `file-unique-id`: use telegram file unique id
+    * `random-uuid`: use a random UUID4
+    * `date`: use datetime
+    * `date+type` (default): use datetime ad append the file type ("image", "video"...)
+  * `TELEGRAM_FILE_NAMING_INCLUDE_EXTENSION` (default '1') try to automatically guess a valid extension
 
 ## Build
 
