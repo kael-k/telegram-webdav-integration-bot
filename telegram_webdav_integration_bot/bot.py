@@ -6,7 +6,7 @@ from uuid import uuid4
 
 import requests
 from telegram import Document, PhotoSize, Update, Video
-from telegram.ext import CallbackContext, Filters, MessageHandler, Updater
+from telegram.ext import CallbackContext, Dispatcher, Filters, MessageHandler, Updater
 
 from telegram_webdav_integration_bot.env import EnvironmentConfig
 from telegram_webdav_integration_bot.utils import get_now_str
@@ -15,6 +15,37 @@ log = logging.getLogger(__name__)
 env_config = EnvironmentConfig()
 
 UploadAttachment = Union[Document, Video, PhotoSize]
+
+
+def get_logger(update: Update) -> logging.LoggerAdapter:
+    if not update.effective_chat:
+        log.warning(f"No chat_id found in update {update.update_id}")
+        handler_log = logging.LoggerAdapter(log)
+    else:
+        handler_log = logging.LoggerAdapter(log, {"chat_id": update.effective_chat.id})
+        handler_log.debug("Incoming message...")
+
+    return handler_log
+
+
+def error_handler(update: Update, context: CallbackContext):
+    """
+    Manage exception with a chat message
+    """
+    handler_log = get_logger(update)
+    err = context.error
+    handler_log.error(msg="Exception while handling an update:", exc_info=err)
+
+    if hasattr(err, "message"):
+        err_fqn = f"{err.__class__.__module__}.{err.__class__.__qualname__}"
+        err_msg = f"{err_fqn}: {err.message}"
+    else:
+        err_msg = repr(err)
+
+    update.effective_message.reply_text(
+        "The bot encountered an error uploading the following file.\n"
+        f"Exception {err_msg}"
+    )
 
 
 def get_filename(attachment: UploadAttachment):
@@ -45,12 +76,7 @@ def get_filename(attachment: UploadAttachment):
 
 
 def process_message(update: Update, _: CallbackContext):
-    if not update.effective_chat:
-        log.warning(f"No chat_id found in update {update.update_id}")
-        handler_log = logging.LoggerAdapter(log)
-    else:
-        handler_log = logging.LoggerAdapter(log, {"chat_id": update.effective_chat.id})
-        handler_log.debug("Incoming message...")
+    handler_log = get_logger(update)
 
     if not (message := update.effective_message):
         raise ValueError("No message found in chat...")
@@ -91,26 +117,23 @@ def process_message(update: Update, _: CallbackContext):
     handler_log.info(f"Uploading file {filename} to WebDAV...")
     try:
         res = requests.put(url, raw_attachment, auth=webdav_auth)
-    except requests.exceptions.RequestException:
+        res.raise_for_status()
+    except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
         handler_log.exception(f"Error during the upload of {filename} to WebDAV")
-        return
+        raise e
 
-    if res.ok:
-        handler_log.info(f"Upload of {filename} successfully completed")
-    else:
-        handler_log.error(
-            f"Error during the upload of {filename} to WebDAV, server responded {res.status_code} {res.reason}"
-        )
+    handler_log.info(f"Upload of {filename} successfully completed")
 
 
 def run_telegram_bot():
     updater = Updater(env_config.TELEGRAM_BOT_TOKEN)
-    dispatcher = updater.dispatcher
+    dispatcher: Dispatcher = updater.dispatcher
 
     filters = Filters.photo | Filters.video | Filters.document | Filters.attachment
     if env_config.TELEGRAM_BOT_CHAT_IDS_DELIMITER:
         filters &= Filters.chat(env_config.TELEGRAM_BOT_CHAT_IDS)
 
     dispatcher.add_handler(MessageHandler(filters=filters, callback=process_message))
+    dispatcher.add_error_handler(callback=error_handler)
     updater.start_polling()
     updater.idle()
