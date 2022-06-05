@@ -1,7 +1,7 @@
 import logging
 
 from telegram_webdav_integration_bot.bot import run_telegram_bot
-from telegram_webdav_integration_bot.logging import config_logging
+from telegram_webdav_integration_bot.log import config_logging
 
 log = logging.getLogger(__name__)
 
